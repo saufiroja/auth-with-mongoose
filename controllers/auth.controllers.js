@@ -1,7 +1,9 @@
 const createError = require('http-errors');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const { User } = require('../database/models/User.Models');
+const { JWT_SECRET } = process.env;
 
 exports.signup = async (req, res, next) => {
   try {
@@ -41,12 +43,21 @@ exports.login = async (req, res, next) => {
       return next(createError(400, 'invalid password'));
     }
 
+    const accessToken = generatorAccessToken(user);
+
     return res.status(201).json({
       message: 'successfully login user',
       code: 200,
       user,
+      accessToken,
     });
   } catch (error) {
     next(error);
   }
+};
+
+const generatorAccessToken = (user) => {
+  const payload = { id: user.id, email: user.email };
+  const token = jwt.sign(payload, JWT_SECRET);
+  return token;
 };
